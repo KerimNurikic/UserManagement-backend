@@ -74,7 +74,7 @@ namespace ZenturyBack.BO
         {
             LoginsPaginated loginsPaginated = new LoginsPaginated();
             loginsPaginated.Logins = await _context.Logins.ToListAsync();
-            loginsPaginated.Logins = loginsPaginated.Logins.OrderBy(x => x.Email).ToList();
+            loginsPaginated.Logins = loginsPaginated.Logins.OrderByDescending(x => x.Date).ToList();
 
             if (!String.IsNullOrEmpty(loginResource.Email))
             {
