@@ -75,10 +75,10 @@ namespace ZenturyBack.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet]
-        public async Task<ActionResult<string>> Test()
+        [HttpGet("isAuth")]
+        public bool IsAuthenticated()
         {
-            return await _dataService.testAsync();
+            return User.Identity.IsAuthenticated;
         }
 
     }

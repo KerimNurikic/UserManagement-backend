@@ -65,14 +65,14 @@ namespace ZenturyBack.BO
 
             usersPaginated.totalItemsCount = usersPaginated.Users.Count;
 
-            usersPaginated.Users = usersPaginated.Users.Skip(usersResource.PageIndex*usersResource.PageSize).Take(usersResource.PageSize).ToList();
+            usersPaginated.Users = usersPaginated.Users.Skip(usersResource.PageIndex * usersResource.PageSize).Take(usersResource.PageSize).ToList();
 
             return usersPaginated;
         }
 
         public async Task<ActionResult<LoginsPaginated>> GetAllLogins(LoginResource loginResource)
         {
-            LoginsPaginated loginsPaginated= new LoginsPaginated();
+            LoginsPaginated loginsPaginated = new LoginsPaginated();
             loginsPaginated.Logins = await _context.Logins.ToListAsync();
             loginsPaginated.Logins = loginsPaginated.Logins.OrderBy(x => x.Email).ToList();
 
@@ -85,7 +85,7 @@ namespace ZenturyBack.BO
             {
                 switch (loginResource.SortOrder)
                 {
-                    
+
                     case "email_desc":
                         loginsPaginated.Logins = loginsPaginated.Logins.OrderByDescending(s => s.Email).ToList();
                         break;
@@ -104,7 +104,6 @@ namespace ZenturyBack.BO
 
         public async Task<ActionResult<User>> AddUser(User user)
         {
-            user.Password = ComputeSHA256(user.Password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -113,43 +112,30 @@ namespace ZenturyBack.BO
 
         public User AuthenticateUser(Signin signin)
         {
-            var user = _context.Users.Where(x => x.Email == signin.Email && x.Password == ComputeSHA256(signin.Password)).FirstOrDefault();
+            var user = _context.Users.Where(x => x.Email == signin.Email && x.Password == signin.Password).FirstOrDefault();
+
+            if (user != null)
+            {
+                _context.Logins.Add(new Login
+                {
+                    Email = signin.Email,
+                    Date = DateTime.Now,
+                    Status = "Success"
+                });
+            }
+            else
+            {
+                _context.Logins.Add(new Login
+                {
+                    Email = signin.Email,
+                    Date = DateTime.Now,
+                    Status = "Failed"
+                });
+            }
+
+            _context.SaveChanges();
             return user;
         }
 
-        public async Task<ActionResult<string>> testAsync()
-        {
-            for(int i = 0; i<95; i++)
-            {
-                await this.AddUser(new User
-                {
-                    FirstName = "kerim" + i,
-                    LastName = "nurikic" + (95-i),
-                    Email = "kerim" + i + "@gmail.com",
-                    Password = "test"
-                });
-            }
-            return "oi";
-        }
-
-        static string ComputeSHA256(string s)
-        {
-            string hash = String.Empty;
-
-            // Initialize a SHA256 hash object
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                // Compute the hash of the given string
-                byte[] hashValue = sha256.ComputeHash(Encoding.UTF8.GetBytes(s));
-
-                // Convert the byte array to string format
-                foreach (byte b in hashValue)
-                {
-                    hash += $"{b:X2}";
-                }
-            }
-
-            return hash;
-        }
     }
 }
